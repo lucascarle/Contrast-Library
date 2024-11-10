@@ -1,16 +1,17 @@
 package model;
 
-public class Person {
+public class User {
 
     private int user_id;
     private String firstName;
     private String lastName;
     private String email;
     private String phone;
-    private String community_id;
+    private int community_id;
+    private String community_name;
 
     //Constructors//
-    public Person() {}
+    public User() {}
 
     //Getters and Setters//
     public int getUser_id() {
@@ -43,10 +44,16 @@ public class Person {
     public void setPhone(String phone) {
         this.phone = phone;
     }
-    public String getCommunity_id() {
+    public int getCommunity_id() {
         return community_id;
     }
-    public void setCommunity_id(String community_id) {
+    public void setCommunity_id(int community_id) {
         this.community_id = community_id;
+    }
+    public String getCommunity_name() {
+        return community_name;
+    }
+    public void setCommunity_name(String community_name) {
+        this.community_name = community_name;
     }
 }
