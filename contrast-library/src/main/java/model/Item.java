@@ -7,6 +7,7 @@ public class Item {
     private int borrowerId;
     private String itemName;
     private String description;
+    //TODO add category to item object
     private boolean available = true;
 
     //Constructors//

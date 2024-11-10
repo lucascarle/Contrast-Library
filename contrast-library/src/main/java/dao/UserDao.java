@@ -23,6 +23,29 @@ public interface UserDao {
      */
     List<User> getUserByCommunityId(int communityId);
 
+    /**
+     * Add a new user to the datastore.
+     *
+     * @param newUser user object to be added
+     * @return the user object of the newly created user including the userID
+     **/
+    User createUser(User newUser);
+
+    /**
+     * Updates an existing user in the datastore.
+     *
+     * @param user is a user object with any updated data.
+     * @return the user object of the updated user.
+     */
+    User updateUser(User user);
+
+    /**
+     * Removes a user from the datastore.
+     *
+     * @param userId ID of the user to be removed from the datastore.
+     */
+    Void deleteUser(int userId);
+
 
 
 

@@ -22,6 +22,7 @@ public class JdbcItemDao implements ItemDao{
     @Override
     public Item getItemById(int itemId) {
         Item item = null;
+        //TODO add category to SQL call
         String sql= "SELECT item_id, " +
                     "owner_id, " +
                     "borrower_id, " +
@@ -45,6 +46,7 @@ public class JdbcItemDao implements ItemDao{
     @Override
     public List<Item> getItemsByOwnerId(int ownerId,boolean onlyShowAvail) {
         List<Item> items= new ArrayList<>();
+        //TODO add category to SQL call
         String sql = "SELECT item_id," +
                      "owner_id," +
                      "borrower_id, " +
@@ -70,6 +72,7 @@ public class JdbcItemDao implements ItemDao{
     @Override
     public List<Item> getItemsByCategoryName(String categoryName,boolean onlyShowAvail) {
         List<Item> items = new ArrayList<>();
+        //TODO add category to SQL call
         String sql = "SELECT i.item_id, " +
                 " owner_id, " +
                 " borrower_id, " +
@@ -99,6 +102,7 @@ public class JdbcItemDao implements ItemDao{
     @Override
     public List<Item> getItemsBySubcategoryName(String subcatName, boolean onlyShowAvail) {
         List<Item> items= new ArrayList<>();
+        //TODO add category to SQL call
         String sql = "SELECT i.item_id," +
                 "owner_id, " +
                 "borrower_id, " +
@@ -127,7 +131,8 @@ public class JdbcItemDao implements ItemDao{
 
     public List<Item> getItemsBySearchKeyword(String search, boolean onlyShowAvail){
       List<Item> items = new ArrayList<>();
-      String sql="SELECT i.item_id, " +
+        //TODO add category to SQL call
+        String sql="SELECT i.item_id, " +
               "owner_id, " +
               "borrower_id, " +
               "item_name, " +
@@ -154,6 +159,7 @@ public class JdbcItemDao implements ItemDao{
     @Override
     public Item addItem(Item itemToAdd) {
         Item newItem = null;
+        //TODO add category to SQL call
         String sql ="INSERT INTO item (owner_ID,item_Name,item_Description) "+
                     "VALUES (select user_ID FROM person WHERE user_id=?),?,?) "+
                     "RETURNING item_id ";
@@ -172,6 +178,7 @@ public class JdbcItemDao implements ItemDao{
     @Override
     public Item updateItem(Item item) {
         Item changedItem=null;
+        //TODO add category to SQL call
         String sql = "UPDATE item " +
                 "SET " +
                 "item_name= ?, " +
@@ -199,6 +206,7 @@ public class JdbcItemDao implements ItemDao{
 
     @Override
     public void deleteItem(int itemId) {
+        //TODO add category to SQL call
         String sql= "DELETE FROM item_subcategory " +
                     "WHERE item_id=?; " +
                     "DELETE FROM item " +
