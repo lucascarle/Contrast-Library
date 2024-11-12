@@ -7,7 +7,8 @@ public class Item {
     private int borrowerId;
     private String itemName;
     private String description;
-    //TODO add category to item object
+    private String category;
+    private String subcat;
     private boolean available = true;
 
     //Constructors//
@@ -52,6 +53,23 @@ public class Item {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getSubcat() {
+        return subcat;
+    }
+
+    public void setSubcat(String subcatName) {
+        this.subcat = subcatName;
+    }
+
     public boolean isAvailable() {
         return available;
     }
