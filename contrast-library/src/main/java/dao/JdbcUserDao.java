@@ -127,7 +127,7 @@ public class JdbcUserDao implements UserDao {
     }
 
     @Override
-    public Void deleteUser(int userId) {
+    public void deleteUser(int userId) {
         String sql=
                 "DELETE FROM item_subcategory " +
                 "WHERE item_id IN (select item_id from item where owner_id=?); " +

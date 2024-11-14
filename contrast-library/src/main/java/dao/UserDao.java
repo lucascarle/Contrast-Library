@@ -44,7 +44,7 @@ public interface UserDao {
      *
      * @param userId ID of the user to be removed from the datastore.
      */
-    Void deleteUser(int userId);
+    void deleteUser(int userId);
 
 
 

@@ -14,6 +14,18 @@ import java.util.List;
 public class JdbcItemDao implements ItemDao {
 
     private final JdbcTemplate jdbcTemplate;
+    private final String baseSqlSelect=
+            "SELECT i.item_id, " +
+            "owner_id, " +
+            "borrower_id, " +
+            "item_name, " +
+            "item_description, " +
+            "category_name, " +
+            "subcat_name, " +
+            "available " +
+            "FROM item i " +
+            "JOIN item_subcategory isub ON i.item_id = isub.item_id " +
+            "JOIN subcategory s ON isub.subcat_id=s.subcat_id ";
 
     public JdbcItemDao(DataSource dataSource) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
@@ -23,13 +35,8 @@ public class JdbcItemDao implements ItemDao {
     public Item getItemById(int itemId) {
         Item item = null;
 
-        String sql = "SELECT item_id, " +
-                "owner_id, " +
-                "borrower_id, " +
-                "item_name, " +
-                "item_description, " +
-                "available" +
-                "FROM item " +
+        String sql =
+                baseSqlSelect +
                 "JOIN person p ON i.owner_id=p.user_id" +
                 "WHERE item_id=?";
         try {
@@ -48,17 +55,7 @@ public class JdbcItemDao implements ItemDao {
         List<Item> items = new ArrayList<>();
 
         String sql =
-                "SELECT item_id," +
-                "owner_id," +
-                "borrower_id, " +
-                "item_name, " +
-                "item_description, " +
-                "category_name, " +
-                "subcat_name, " +
-                "available " +
-                "FROM item " +
-                "JOIN item_subcategory isub ON i.item_id = isub.item_id " +
-                "JOIN subcategory s ON isub.subcat_id=s.subcat_id " +
+                baseSqlSelect+
                 "WHERE owner_id = ? ";
         if (onlyShowAvail) {
             sql += "AND available=true ";
@@ -79,18 +76,8 @@ public class JdbcItemDao implements ItemDao {
         List<Item> items = new ArrayList<>();
 
         String sql =
-                "SELECT i.item_id, " +
-                        " owner_id, " +
-                        " borrower_id, " +
-                        " item_name, " +
-                        " item_description, " +
-                        " category_name, " +
-                        " subcat_name, " +
-                        " available " +
-                        "FROM item i " +
-                        "JOIN item_subcategory isub ON i.item_id = isub.item_id " +
-                        "JOIN subcategory s ON isub.subcat_id=s.subcat_id " +
-                        "WHERE category_name = ?";
+                baseSqlSelect +
+                "WHERE category_name = ?";
         if (onlyShowAvail) {
             sql += "AND available=true ";
         }
@@ -110,18 +97,8 @@ public class JdbcItemDao implements ItemDao {
         List<Item> items = new ArrayList<>();
 
         String sql =
-                "SELECT i.item_id," +
-                        "owner_id, " +
-                        "borrower_id, " +
-                        "item_name, " +
-                        "item_description, " +
-                        "category_name, " +
-                        "subcat_name, " +
-                        "available " +
-                        "FROM item i " +
-                        "JOIN item_subcategory isub ON i.item_id = isub.item_id " +
-                        "JOIN subcategory s ON isub.subcat_id=s.subcat_id " +
-                        "WHERE subcat_name= ?";
+                baseSqlSelect +
+                "WHERE subcat_name= ?";
         if (onlyShowAvail) {
             sql += "AND available=true ";
         }
@@ -139,17 +116,8 @@ public class JdbcItemDao implements ItemDao {
     public List<Item> getItemsBySearchKeyword(String search, boolean onlyShowAvail) {
         List<Item> items = new ArrayList<>();
 
-        String sql = "SELECT i.item_id, " +
-                "owner_id, " +
-                "borrower_id, " +
-                "item_name, " +
-                "item_description, " +
-                "category_name, " +
-                "subcat_name, " +
-                "available " +
-                "FROM item i " +
-                "JOIN item_subcategory isub ON i.item_id = isub.item_id " +
-                "JOIN subcategory s ON isub.subcat_id=s.subcat_id " +
+        String sql =
+                baseSqlSelect+
                 "WHERE item_name ilike %?% " +
                 "OR item_description ilike %?% ";
         if (onlyShowAvail) {
@@ -171,11 +139,21 @@ public class JdbcItemDao implements ItemDao {
     public Item addItem(Item itemToAdd) {
         Item newItem = null;
         //TODO add category to SQL call
-        String sql = "INSERT INTO item (owner_ID,item_Name,item_Description) " +
+        String sql =
+                "INSERT INTO item (owner_ID,item_Name,item_Description) " +
                 "VALUES (select user_ID FROM person WHERE user_id=?),?,?) " +
                 "RETURNING item_id ";
+        String sqlAttachCategory =
+                "INSERT INTO item_subcategory (subcat_id,item_id) " +
+                "VALUES (SELECT subcat_ID from Subcategory WHERE category_Name= ? AND subcat_Name= ? ), ? "
         try {
-            int newItemId = jdbcTemplate.queryForObject(sql, int.class, itemToAdd.getOwnerId(), itemToAdd.getItemName(), itemToAdd.getDescription());
+            int newItemId =
+                    jdbcTemplate.queryForObject(sql, int.class,
+                    itemToAdd.getOwnerId(),
+                    itemToAdd.getItemName(),
+                    itemToAdd.getDescription());
+            //TODO check if void.class is viable
+            jdbcTemplate.queryForObject(sqlAttachCategory,void.class,itemToAdd.getCategory(),itemToAdd.getSubcat(),newItemId);
             newItem = getItemById(newItemId);
 
         } catch (CannotGetJdbcConnectionException e) {
@@ -190,14 +168,19 @@ public class JdbcItemDao implements ItemDao {
     public Item updateItem(Item item) {
         Item changedItem = null;
         //TODO add category to SQL call
-        String sql = "UPDATE item " +
+        String sql =
+                "UPDATE item " +
                 "SET " +
                 "item_name= ?, " +
                 "item_description= ?, " +
                 "available = ? " +
                 "WHERE item_id= ? ";
         try {
-            int rowCt = jdbcTemplate.update(sql, item.getItemName(), item.getDescription(), item.isAvailable(), item.getItemId());
+            int rowCt = jdbcTemplate.update(sql,
+                    item.getItemName(),
+                    item.getDescription(),
+                    item.isAvailable(),
+                    item.getItemId());
             if (rowCt != 1) {
                 throw new DaoException("Unable to make update");
             } else {
@@ -214,7 +197,8 @@ public class JdbcItemDao implements ItemDao {
     @Override
     public void deleteItem(int itemId) {
         //TODO add category to SQL call
-        String sql = "DELETE FROM item_subcategory " +
+        String sql =
+                "DELETE FROM item_subcategory " +
                 "WHERE item_id=?; " +
                 "DELETE FROM item " +
                 "WHERE item_id=? ";
