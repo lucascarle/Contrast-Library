@@ -138,22 +138,21 @@ public class JdbcItemDao implements ItemDao {
     @Override
     public Item addItem(Item itemToAdd) {
         Item newItem = null;
-        //TODO add category to SQL call
+
         String sql =
                 "INSERT INTO item (owner_ID,item_Name,item_Description) " +
                 "VALUES (select user_ID FROM person WHERE user_id=?),?,?) " +
                 "RETURNING item_id ";
-        String sqlAttachCategory =
-                "INSERT INTO item_subcategory (subcat_id,item_id) " +
-                "VALUES (SELECT subcat_ID from Subcategory WHERE category_Name= ? AND subcat_Name= ? ), ? "
         try {
             int newItemId =
                     jdbcTemplate.queryForObject(sql, int.class,
                     itemToAdd.getOwnerId(),
                     itemToAdd.getItemName(),
                     itemToAdd.getDescription());
-            //TODO check if void.class is viable
-            jdbcTemplate.queryForObject(sqlAttachCategory,void.class,itemToAdd.getCategory(),itemToAdd.getSubcat(),newItemId);
+
+            itemToAdd.setItemId(newItemId);
+            //itemToAdd now completed with itemID can be put into subcat method
+            linkItemToSubcategory(itemToAdd);
             newItem = getItemById(newItemId);
 
         } catch (CannotGetJdbcConnectionException e) {
@@ -164,10 +163,39 @@ public class JdbcItemDao implements ItemDao {
         return newItem;
     }
 
+    public void linkItemToSubcategory(Item item){
+        String sqlAttachCategory =
+                "INSERT INTO item_subcategory (subcat_id,item_id) " +
+                "VALUES (SELECT subcat_ID from Subcategory WHERE category_Name= ? AND subcat_Name= ? ), ? ";
+        try{
+            jdbcTemplate.queryForObject(sqlAttachCategory,int.class,
+                    item.getCategory(),
+                    item.getSubcat(),
+                    item.getItemId());
+        }catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+    }
+
+    public void unlinkItemFromSubcategory(int itemId){
+        String sql=
+                "DELETE FROM item_subcategory " +
+                "WHERE item_id=? ";
+        try {
+            jdbcTemplate.update(sql, itemId, itemId);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data Integrity Violation", e);
+        }
+    }
+
+
     @Override
     public Item updateItem(Item item) {
         Item changedItem = null;
-        //TODO add category to SQL call
         String sql =
                 "UPDATE item " +
                 "SET " +
@@ -181,6 +209,8 @@ public class JdbcItemDao implements ItemDao {
                     item.getDescription(),
                     item.isAvailable(),
                     item.getItemId());
+            unlinkItemFromSubcategory(item.getItemId());
+            linkItemToSubcategory(item);
             if (rowCt != 1) {
                 throw new DaoException("Unable to make update");
             } else {
@@ -198,12 +228,11 @@ public class JdbcItemDao implements ItemDao {
     public void deleteItem(int itemId) {
         //TODO add category to SQL call
         String sql =
-                "DELETE FROM item_subcategory " +
-                "WHERE item_id=?; " +
                 "DELETE FROM item " +
                 "WHERE item_id=? ";
 
         try {
+            unlinkItemFromSubcategory(itemId);
             jdbcTemplate.update(sql, itemId, itemId);
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException("Unable to connect to server or database", e);
